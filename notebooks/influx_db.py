@@ -14,6 +14,7 @@ def _():
 async def _():
     import micropip
     await micropip.install('influxdb-client')
+    await micropip.install('ssl')
     return (micropip,)
 
 
@@ -27,20 +28,66 @@ def _():
     org = "danko_corp"
     url = "http://192.168.0.3:8086"
 
-    write_client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
+    client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
     return (
         InfluxDBClient,
         Point,
         SYNCHRONOUS,
         WritePrecision,
+        client,
         influxdb_client,
         org,
         os,
         time,
         token,
         url,
-        write_client,
     )
+
+
+@app.cell
+def _(Point, SYNCHRONOUS, client, time):
+    bucket="danko_bucket"
+
+    write_api = client.write_api(write_options=SYNCHRONOUS)
+       
+    for value in range(5):
+      point = (
+        Point("measurement1")
+        .tag("tagname1", "tagvalue1")
+        .field("field1", value)
+      )
+      write_api.write(bucket=bucket, org="danko_corp", record=point)
+      time.sleep(1) # separate points by 1 second
+    return bucket, point, value, write_api
+
+
+@app.cell
+def _(client):
+    query_api = client.query_api()
+
+    query = """from(bucket: "danko_bucket")
+     |> range(start: -10m)
+     |> filter(fn: (r) => r._measurement == "measurement1")"""
+    tables = query_api.query(query, org="danko_corp")
+
+    for table in tables:
+      for record in table.records:
+        print(record)
+    return query, query_api, record, table, tables
+
+
+@app.cell
+def _(query_api):
+    new_query = """from(bucket: "danko_bucket")
+      |> range(start: -10m)
+      |> filter(fn: (r) => r._measurement == "measurement1")
+      |> mean()"""
+    _tables = query_api.query(new_query, org="danko_corp")
+
+    for _table in _tables:
+        for _record in _table.records:
+            print(_record)
+    return (new_query,)
 
 
 @app.cell
