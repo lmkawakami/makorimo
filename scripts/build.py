@@ -63,7 +63,7 @@ def generate_index(all_notebooks: List[str], output_dir: str) -> None:
 """
             )
             for notebook in all_notebooks:
-                notebook_name = notebook.split("/")[-1].replace(".py", "")
+                notebook_name = notebook.split(os.sep)[-1].replace(".py", "")
                 display_name = notebook_name.replace("_", " ").title()
 
                 f.write(
@@ -105,7 +105,7 @@ def main() -> None:
 
     # Export notebooks sequentially
     for nb in all_notebooks:
-        export_html_wasm(nb, args.output_dir, as_app=nb.startswith("apps/"))
+        export_html_wasm(nb, args.output_dir, as_app=nb.startswith("apps"+os.sep))
 
     # Generate index only if all exports succeeded
     generate_index(all_notebooks, args.output_dir)
