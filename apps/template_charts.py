@@ -19,7 +19,7 @@ def _(mo):
         """
         # Interactive Data Visualization
 
-        <img src="public/logo.png" width="200" />
+        <img src="public/_logo.png" width="200" />
 
         This notebook demonstrates a simple interactive visualization using Altair.
         Try selecting the points!

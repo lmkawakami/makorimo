@@ -27,7 +27,7 @@ def _(mo):
 @app.cell
 def _(mo, pl):
     # Read the penguins dataset
-    df = pl.read_csv(str(mo.notebook_location() / "public" / "penguins.csv"))
+    df = pl.read_csv(str(mo.notebook_location() / "public" / "_penguins.csv"))
     df.head()
     return (df,)
 
