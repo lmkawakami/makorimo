@@ -47,7 +47,7 @@ def generate_index(all_notebooks: List[str], output_dir: str) -> None:
     os.makedirs(output_dir, exist_ok=True)
 
     try:
-        with open(index_path, "w") as f:
+        with open(index_path, "w", encoding="utf-8") as f:
             f.write(
                 """<!DOCTYPE html>
 <html lang="en">
@@ -63,6 +63,7 @@ def generate_index(all_notebooks: List[str], output_dir: str) -> None:
 """
             )
             for notebook in all_notebooks:
+                export_type = "app 📱" if notebook.startswith("apps"+os.sep) else "notebook 📒"
                 notebook_name = notebook.split(os.sep)[-1].replace(".py", "")
                 display_name = notebook_name.replace("_", " ").title()
 
@@ -70,7 +71,7 @@ def generate_index(all_notebooks: List[str], output_dir: str) -> None:
                     f'      <div class="p-4 border border-gray-200 rounded">\n'
                     f'        <h3 class="text-lg font-semibold mb-2">{display_name}</h3>\n'
                     f'        <div class="flex gap-2">\n'
-                    f'          <a href="{notebook.replace(".py", ".html")}" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded">Open Notebook</a>\n'
+                    f'          <a href="{notebook.replace(".py", ".html")}" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded">Open {export_type}</a>\n'
                     f"        </div>\n"
                     f"      </div>\n"
                 )
