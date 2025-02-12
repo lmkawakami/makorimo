@@ -49,7 +49,7 @@ def _(Point, SYNCHRONOUS, client, time):
     bucket="danko_bucket"
 
     write_api = client.write_api(write_options=SYNCHRONOUS)
-       
+
     for value in range(5):
       point = (
         Point("measurement1")
@@ -66,64 +66,37 @@ def _(client):
     query_api = client.query_api()
 
     query = """from(bucket: "danko_bucket")
-     |> range(start: -10m)
-     |> filter(fn: (r) => r._measurement == "measurement1")"""
+     |> range(start: -15m)
+     |> filter(fn: (r) => r["_measurement"] == "kilns")
+     |> aggregateWindow(every: 5s, fn: mean, createEmpty: false)
+    """
     tables = query_api.query(query, org="danko_corp")
 
+    data = []
     for table in tables:
       for record in table.records:
-        print(record)
-    return query, query_api, record, table, tables
+        data.append({
+            "time": record["_time"],
+            "measurement": record["_measurement"],
+            "field": record["_field"],
+            "value": record["_value"],
+            "kiln": record["kiln"],
+            "location": record["location"],
+            "serial": record["serial"],
+            "start_date": record["start_date"],
+            "type": record["type"]
+        })
+    return data, query, query_api, record, table, tables
 
 
 @app.cell
-def _(query_api):
-    new_query = """from(bucket: "danko_bucket")
-      |> range(start: -10m)
-      |> filter(fn: (r) => r._measurement == "measurement1")
-      |> mean()"""
-    _tables = query_api.query(new_query, org="danko_corp")
-
-    for _table in _tables:
-        for _record in _table.records:
-            print(_record)
-    return (new_query,)
-
-
-@app.cell
-def _():
-    # from influxdb_client import InfluxDBClient, Point
-    # from influxdb_client.client.write_api import SYNCHRONOUS
-
-    # INFLUXDB_TOKEN="bRsS5n3qyCV7ZX7gxsPn15YR7OlW__Ak-bl1fpaxaz0arL_pPMaskYCt8czqOlC2xD-JdqmaUKgq_XnRb3Fb4Q=="
-    # org = "danko_corp"
-    # url = "http://192.168.0.3:8086"
-
-    # client = InfluxDBClient(url="http://localhost:8086", token="my-token", org="my-org")
-
-    # write_api = client.write_api(write_options=SYNCHRONOUS)
-    # query_api = client.query_api()
-
-    # p = Point("my_measurement").tag("location", "Prague").field("temperature", 25.3)
-
-    # write_api.write(bucket=bucket, record=p)
-
-    # ## using Table structure
-    # tables = query_api.query('from(bucket:"my-bucket") |> range(start: -10m)')
-
-    # for table in tables:
-    #     print(table)
-    #     for row in table.records:
-    #         print (row.values)
-
-
-    # ## using csv library
-    # csv_result = query_api.query_csv('from(bucket:"my-bucket") |> range(start: -10m)')
-    # val_count = 0
-    # for row in csv_result:
-    #     for cell in row:
-    #         val_count += 1
-    return
+def _(data):
+    import pandas as pd
+    df= pd.DataFrame(data)
+    df = pd.pivot_table(df, values="value", index="time", columns="field")
+    df.index = df.index.tz_convert("America/Sao_Paulo")
+    df
+    return df, pd
 
 
 if __name__ == "__main__":
