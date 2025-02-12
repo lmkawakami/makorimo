@@ -99,5 +99,21 @@ def _(data):
     return df, pd
 
 
+@app.cell
+async def _(micropip):
+    await micropip.install('plotly')
+    import plotly.express as px
+    return (px,)
+
+
+@app.cell
+def _(df, mo, px):
+    plot = mo.ui.plotly(
+      px.scatter(df, y=df.columns, width=700, height=400)
+    )
+    plot
+    return (plot,)
+
+
 if __name__ == "__main__":
     app.run()
